@@ -22,7 +22,7 @@ import java.lang.annotation.Target;
 /**
  * Marks a field which will be represented in a properties file.
  *
- * @author hutdev <hutdevelopment@gmail.com>
+ * @author <a href="mailto:hutdevelopment@gmail.com">hutdev</a>
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)

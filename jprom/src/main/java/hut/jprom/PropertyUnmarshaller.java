@@ -31,7 +31,7 @@ import java.util.stream.Stream;
  * Converts property file input to Java objects. TODO: Use asm for faster
  * analysis of annotated types and fields.
  *
- * @author hutdev <hutdevelopment@gmail.com>
+ * @author <a href="mailto:hutdevelopment@gmail.com">hutdev</a>
  */
 public class PropertyUnmarshaller implements Closeable {
 

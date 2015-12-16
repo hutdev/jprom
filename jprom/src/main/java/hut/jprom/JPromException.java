@@ -17,7 +17,7 @@ package hut.jprom;
 /**
  * Base type for exceptions used in the jprom API.
  *
- * @author hutdev <hutdevelopment@gmail.com>
+ * @author <a href="mailto:hutdevelopment@gmail.com">hutdev</a>
  */
 public class JPromException extends Exception {
 

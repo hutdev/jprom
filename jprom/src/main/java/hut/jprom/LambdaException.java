@@ -19,7 +19,7 @@ package hut.jprom;
  * expressions. The implementation makes sure that the causing exception will
  * always be of the type {@link JPromException}.
  *
- * @author hutdev <hutdevelopment@gmail.com>
+ * @author <a href="mailto:hutdevelopment@gmail.com">hutdev</a>
  */
 class LambdaException extends RuntimeException {
 

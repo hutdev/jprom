@@ -20,7 +20,7 @@ import java.util.Map;
  * Sequential streams do not need a combiner for collect operations. This class
  * provides a combiner method for {@link Map}s that does not do anything.
  *
- * @author hutdev <hutdevelopment@gmail.com>
+ * @author <a href="mailto:hutdevelopment@gmail.com">hutdev</a>
  */
 class NoOpMapCombiner {
 
