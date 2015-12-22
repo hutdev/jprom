@@ -1,0 +1,93 @@
+/*
+  * Copyright (c) 2015, hutdev <hutdevelopment@gmail.com>
+  * Permission to use, copy, modify, and/or distribute this software for any
+  * purpose with or without fee is hereby granted, provided that the above
+  * copyright notice and this permission notice appear in all copies.
+  * 
+  * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+  * REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+  * AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+  * INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+  * LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+  * OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+  * PERFORMANCE OF THIS SOFTWARE.
+ */
+package hut.jprom;
+
+import java.io.Closeable;
+import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Stream;
+
+/**
+ * Base functionality for classes processing property data.
+ *
+ * @author <a href="mailto:hutdevelopment@gmail.com">hutdev</a>
+ */
+abstract class PropertyProcessor implements Closeable {
+
+    /**
+     * Path delimiter in property names.
+     */
+    static final String PROPERTY_PATH_DELIMITER = ".";
+    /**
+     * Error message format used when a property name has been defined for
+     * multiple fields in a class.
+     */
+    private static final String ERROR_MULT_PROP_DEF = "Multiple definitions for property %s in %s";
+    /**
+     * Regular expression to determine whether a {@link String} is empty or
+     * consists of whitespace only.
+     */
+    private static final String REGEX_BLANK_STRING = "^\\s*$";
+
+    /**
+     * Computes the prefix for properties pertaining to the specified class.
+     *
+     * @param clazz The class containing the fields the properties are mapped
+     * to.
+     * @return The common prefix of properties mapped to the specified class.
+     */
+    static String getPropertyPrefix(Class<?> clazz) {
+        final PropertyRoot propertyRoot
+                = clazz.getDeclaredAnnotation(PropertyRoot.class);
+        return (propertyRoot != null && !propertyRoot.name().matches(REGEX_BLANK_STRING))
+                ? propertyRoot.name()
+                : clazz.getSimpleName();
+    }
+
+    /**
+     * Finds the fields relevant for processing and determines the field names
+     * used in the property definitions. TODO consider using the getter and
+     * setter methods directly (e. g. getPropertyGetters, getPropertySetters)
+     *
+     * @param clazz The class defining the property fields.
+     * @return A mapping of the field names to the fields.
+     * @throws JPromException A field name was defined more than once.
+     */
+    static Map<String, Field> getPropertyFields(Class<?> clazz)
+            throws JPromException {
+        try {
+            return Stream.of(clazz.getDeclaredFields())
+                    .collect(HashMap::new,
+                            (map, field) -> {
+                                final Property pdef = field.getAnnotation(Property.class);
+                                if (pdef != null) {
+                                    final String pname
+                                    = pdef.name().matches(REGEX_BLANK_STRING)
+                                    ? field.getName()
+                                    : pdef.name();
+                                    if (map.containsKey(pname)) {
+                                        throw new LambdaException(ERROR_MULT_PROP_DEF,
+                                                pname, clazz);
+                                    }
+                                    map.put(pname, field);
+                                }
+                            },
+                            NoOpCombiner::combineMaps);
+        } catch (LambdaException ex) {
+            throw ex.getCause();
+        }
+    }
+}

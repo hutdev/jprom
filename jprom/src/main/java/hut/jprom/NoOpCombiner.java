@@ -14,22 +14,36 @@
  */
 package hut.jprom;
 
+import java.util.Map;
+import java.util.Properties;
+
 /**
- * Base type for exceptions used in the jprom API. TODO: Create subtypes for
- * various error scenarios.
+ * Sequential streams do not need a combiner for collect operations, therefore
+ * this class provides combiner methods that do not do anything.
+ * <strong>Do not use the combiner methods provided by this class in collect
+ * operations on parallel streams!</strong>
+ * TODO: Create operational combiner methods. No op combiners might not be
+ * supported in future Java versions.
  *
  * @author <a href="mailto:hutdevelopment@gmail.com">hutdev</a>
  */
-public class JPromException extends Exception {
+class NoOpCombiner {
 
-    private static final long serialVersionUID = 2459563272758542732L;
-
-    JPromException(Throwable cause) {
-        super(cause);
+    /**
+     * Combiner method that does not do anything.
+     *
+     * @param t
+     * @param u
+     */
+    static void combineMaps(Map t, Map u) {
     }
 
-    JPromException(String message) {
-        super(message);
+    /**
+     * Combiner method that does not do anything.
+     *
+     * @param t
+     * @param u
+     */
+    static void combineProperties(Properties t, Properties u) {
     }
-
 }
