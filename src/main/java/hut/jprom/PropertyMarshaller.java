@@ -27,8 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 
 /**
- * Converts Java objects into property file output. TODO: Use asm for faster
- * analysis of annotated types and fields.
+ * Converts Java objects into property file output.
  *
  * @author <a href="mailto:hutdevelopment@gmail.com">hutdev</a>
  */

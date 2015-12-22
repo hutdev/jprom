@@ -26,8 +26,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Converts property file input to Java objects. TODO: Use asm for faster
- * analysis of annotated types and fields.
+ * Converts property file input to Java objects.
  *
  * @author <a href="mailto:hutdevelopment@gmail.com">hutdev</a>
  */
