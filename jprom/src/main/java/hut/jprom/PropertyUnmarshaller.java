@@ -48,11 +48,6 @@ public class PropertyUnmarshaller extends PropertyProcessor {
      */
     private static final String SETTER_PREFIX = "set";
     /**
-     * Error message format used when no matching field was found in a class for
-     * a property name.
-     */
-    private static final String ERROR_NO_SUCH_FIELD = "No field found for property %s in class %s";
-    /**
      * Error message format used when a property field name could not be
      * extracted from a property name.
      */
@@ -122,12 +117,14 @@ public class PropertyUnmarshaller extends PropertyProcessor {
      * required to deserialize the provided property data to objects.
      * @throws MissingInstanceNameException instance name could not be extracted
      * from a property name.
+     * @throws NoSuchFieldException no matching field was found in a class for a
+     * property name.
      * @throws JPromException Could not construct objects of the specified type
      * from the input data.
      */
     public <T> Map<String, T> unmarshal(Class<T> clazz)
             throws MultiplePropertyDefinitionException, ReflectionException,
-            MissingInstanceNameException, JPromException {
+            MissingInstanceNameException, NoSuchFieldException, JPromException {
         final String rootName = getPropertyPrefix(clazz);
 
         try {
@@ -156,8 +153,8 @@ public class PropertyUnmarshaller extends PropertyProcessor {
                                 });
                         final Field field = propertyFields.get(propNameMatcher.group(1));
                         if (field == null) {
-                            throw new LambdaException(ERROR_NO_SUCH_FIELD,
-                                    pname, clazz);
+                            throw new NoSuchFieldException(pname, clazz)
+                            .forLambda();
                         }
                         try {
                             setFieldValue(instance, field, properties.getProperty(pname));
