@@ -23,7 +23,7 @@ package hut.jprom;
  */
 class LambdaException extends RuntimeException {
 
-    private static final long serialVersionUID = -6009150692817958096L;
+    private static final long serialVersionUID = -344203650287280522L;
 
     /**
      * Creates a new instance of <code>LambdaException</code> with a causing
@@ -38,32 +38,6 @@ class LambdaException extends RuntimeException {
         super(cause instanceof JPromException
                 ? cause
                 : new JPromException(cause));
-    }
-
-    /**
-     * Creates a new instance of <code>LambdaException</code> with an exception
-     * message. The message will be wrapped in an instance of
-     * {@link JPromException}.
-     *
-     * @param message The exception message.
-     */
-    LambdaException(String message) {
-        this(new JPromException(message));
-    }
-
-    /**
-     * Creates a new instance of <code>LambdaException</code> with an exception
-     * message. The message will be wrapped in an instance of
-     * {@link JPromException}. This constructor makes use of
-     * {@link String#format(java.lang.String, java.lang.Object...)} and will
-     * pass its arguments to said method to construct the exception message.
-     *
-     * @param msgFormat Format for the exception message.
-     * @param arguments Arguments for the exception message format.
-     * @see String#format(java.lang.String, java.lang.Object...)
-     */
-    LambdaException(String msgFormat, Object... arguments) {
-        this(String.format(msgFormat, arguments));
     }
 
     @Override
