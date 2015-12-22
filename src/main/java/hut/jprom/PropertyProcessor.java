@@ -54,8 +54,7 @@ abstract class PropertyProcessor implements Closeable {
 
     /**
      * Finds the fields relevant for processing and determines the field names
-     * used in the property definitions. TODO consider using the getter and
-     * setter methods directly (e. g. getPropertyGetters, getPropertySetters)
+     * used in the property definitions.
      *
      * @param clazz The class defining the property fields.
      * @return A mapping of the field names to the fields.
