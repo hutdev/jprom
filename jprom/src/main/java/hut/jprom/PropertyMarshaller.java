@@ -92,13 +92,13 @@ public class PropertyMarshaller extends PropertyProcessor {
      * @param comment Comment which will be written to the property output.
      * @throws MultiplePropertyDefinitionException A field name was defined more
      * than once.
-     * @throws JPromException Could not serialize the provided objects to
-     * property data.
+     * @throws ReflectionException Could not perform reflective operations
+     * required to serialize the provided objects to property data.
      * @throws java.io.IOException Could not write properties to the output.
      * @see Properties#store(java.io.OutputStream, java.lang.String)
      */
     public <T> void marshal(Map<String, T> objects, String comment)
-            throws MultiplePropertyDefinitionException, JPromException, IOException {
+            throws MultiplePropertyDefinitionException, ReflectionException, IOException {
         if (!objects.isEmpty()) {
             final Class<T> clazz = (Class<T>) objects.values()
                     .iterator().next().getClass();
@@ -121,7 +121,7 @@ public class PropertyMarshaller extends PropertyProcessor {
                                 properties.setProperty(propertyName,
                                         propertyValue.toString());
                             } catch (ReflectiveOperationException ex) {
-                                throw new LambdaException(ex);
+                                throw new ReflectionException(ex).forLambda();
                             }
                         });
                     };
@@ -133,7 +133,7 @@ public class PropertyMarshaller extends PropertyProcessor {
                                 NoOpCombiner::combineProperties)
                         .store(output, comment);
             } catch (LambdaException ex) {
-                throw ex.getCause();
+                throw (ReflectionException) ex.getCause();
             }
         }
     }
@@ -146,13 +146,13 @@ public class PropertyMarshaller extends PropertyProcessor {
      * @param objects The objects which will be converted to property data.
      * @throws MultiplePropertyDefinitionException A field name was defined more
      * than once.
-     * @throws JPromException Could not serialize the provided objects to
-     * property data.
+     * @throws ReflectionException Could not perform reflective operations
+     * required to serialize the provided objects to property data.
      * @throws java.io.IOException Could not write properties to the output.
      * @see Properties#store(java.io.OutputStream, java.lang.String)
      */
     public <T> void marshal(Map<String, T> objects)
-            throws MultiplePropertyDefinitionException, JPromException, IOException {
+            throws MultiplePropertyDefinitionException, ReflectionException, IOException {
         marshal(objects, DEFAULT_COMMENT);
     }
 
@@ -166,13 +166,13 @@ public class PropertyMarshaller extends PropertyProcessor {
      * @param comment Comment which will be written to the property output.
      * @throws MultiplePropertyDefinitionException A field name was defined more
      * than once.
-     * @throws JPromException Could not serialize the provided objects to
-     * property data.
+     * @throws ReflectionException Could not perform reflective operations
+     * required to serialize the provided objects to property data.
      * @throws java.io.IOException Could not write properties to the output.
      * @see Properties#store(java.io.OutputStream, java.lang.String)
      */
     public <T> void marshal(Collection<T> objects, String comment)
-            throws MultiplePropertyDefinitionException, JPromException, IOException {
+            throws MultiplePropertyDefinitionException, ReflectionException, IOException {
         final HashMap<String, T> mappedObjects = objects.stream()
                 .collect(HashMap::new,
                         (map, object)
@@ -190,13 +190,13 @@ public class PropertyMarshaller extends PropertyProcessor {
      * @param objects The objects which will be converted to property data.
      * @throws MultiplePropertyDefinitionException A field name was defined more
      * than once.
-     * @throws JPromException Could not serialize the provided objects to
-     * property data.
+     * @throws ReflectionException Could not perform reflective operations
+     * required to serialize the provided objects to property data.
      * @throws java.io.IOException Could not write properties to the output.
      * @see Properties#store(java.io.OutputStream, java.lang.String)
      */
     public <T> void marshal(Collection<T> objects)
-            throws MultiplePropertyDefinitionException, JPromException, IOException {
+            throws MultiplePropertyDefinitionException, ReflectionException, IOException {
         marshal(objects, DEFAULT_COMMENT);
     }
 

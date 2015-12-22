@@ -123,11 +123,13 @@ public class PropertyUnmarshaller extends PropertyProcessor {
      * @return A mapping of the instance names to their object instances.
      * @throws MultiplePropertyDefinitionException A field name was defined more
      * than once.
+     * @throws ReflectionException Could not perform reflective operations
+     * required to deserialize the provided property data to objects.
      * @throws JPromException Could not construct objects of the specified type
      * from the input data.
      */
     public <T> Map<String, T> unmarshal(Class<T> clazz)
-            throws MultiplePropertyDefinitionException, JPromException {
+            throws MultiplePropertyDefinitionException, ReflectionException, JPromException {
         final String rootName = getPropertyPrefix(clazz);
 
         try {
@@ -151,7 +153,7 @@ public class PropertyUnmarshaller extends PropertyProcessor {
                                     try {
                                         return clazz.newInstance();
                                     } catch (ReflectiveOperationException ex) {
-                                        throw new LambdaException(ex);
+                                        throw new ReflectionException(ex).forLambda();
                                     }
                                 });
                         final Field field = propertyFields.get(propNameMatcher.group(1));
@@ -162,7 +164,7 @@ public class PropertyUnmarshaller extends PropertyProcessor {
                         try {
                             setFieldValue(instance, field, properties.getProperty(pname));
                         } catch (ReflectiveOperationException ex) {
-                            throw new LambdaException(ex);
+                            throw new ReflectionException(ex).forLambda();
                         }
                     };
             return properties.stringPropertyNames().stream()
