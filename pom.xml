@@ -10,4 +10,26 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
+    <name>${project.groupId}:${project.artifactId}</name>
+    <description>A library for mapping Java property files to objects</description>
+    <url>https://github.com/hutdev/jprom</url>
+    <licenses>
+        <license>
+            <name>ISC License</name>
+            <url>http://opensource.org/licenses/isc-license.txt</url>
+        </license>
+    </licenses>
+    <developers>
+        <developer>
+            <name>hutdev</name>
+            <email>hutdevelopment@gmail.com</email>
+            <organization>hutdev</organization>
+            <organizationUrl>https://github.com/hutdev</organizationUrl>
+        </developer>
+    </developers>
+    <scm>
+        <connection>scm:git:git@github.com:hutdev/jprom.git</connection>
+        <developerConnection>scm:git:git@github.com:hutdev/jprom.git</developerConnection>
+        <url>git@github.com:hutdev/jprom.git</url>
+    </scm>
 </project>
