@@ -58,11 +58,6 @@ public class PropertyUnmarshaller extends PropertyProcessor {
      */
     private static final String ERROR_NO_PROPERTY_NAME = "Cannot extract property name from %s";
     /**
-     * Error message format used when an instance name could not be extracted
-     * from a property name.
-     */
-    private static final String ERROR_NO_INSTANCE_NAME = "Cannot extract instance name from %s for class %s";
-    /**
      * Property input.
      */
     private final InputStream input;
@@ -125,11 +120,14 @@ public class PropertyUnmarshaller extends PropertyProcessor {
      * than once.
      * @throws ReflectionException Could not perform reflective operations
      * required to deserialize the provided property data to objects.
+     * @throws MissingInstanceNameException instance name could not be extracted
+     * from a property name.
      * @throws JPromException Could not construct objects of the specified type
      * from the input data.
      */
     public <T> Map<String, T> unmarshal(Class<T> clazz)
-            throws MultiplePropertyDefinitionException, ReflectionException, JPromException {
+            throws MultiplePropertyDefinitionException, ReflectionException,
+            MissingInstanceNameException, JPromException {
         final String rootName = getPropertyPrefix(clazz);
 
         try {
@@ -139,8 +137,8 @@ public class PropertyUnmarshaller extends PropertyProcessor {
                     = (map, pname) -> {
                         final Matcher instNameMatcher = INSTANCE_NAME.matcher(pname);
                         if (!instNameMatcher.matches()) {
-                            throw new LambdaException(ERROR_NO_INSTANCE_NAME,
-                                    pname, clazz);
+                            throw new MissingInstanceNameException(pname, clazz)
+                            .forLambda();
                         }
                         final Matcher propNameMatcher = PROPERTY_FIELD_NAME.matcher(pname);
                         if (!propNameMatcher.matches()) {
