@@ -22,8 +22,6 @@ import java.util.Properties;
  * this class provides combiner methods that do not do anything.
  * <strong>Do not use the combiner methods provided by this class in collect
  * operations on parallel streams!</strong>
- * TODO: Create operational combiner methods. No op combiners might not be
- * supported in future Java versions.
  *
  * @author <a href="mailto:hutdevelopment@gmail.com">hutdev</a>
  */
