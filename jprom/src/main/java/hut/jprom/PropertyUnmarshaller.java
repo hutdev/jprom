@@ -48,11 +48,6 @@ public class PropertyUnmarshaller extends PropertyProcessor {
      */
     private static final String SETTER_PREFIX = "set";
     /**
-     * Error message format used when a property field name could not be
-     * extracted from a property name.
-     */
-    private static final String ERROR_NO_PROPERTY_NAME = "Cannot extract property name from %s";
-    /**
      * Property input.
      */
     private final InputStream input;
@@ -119,12 +114,12 @@ public class PropertyUnmarshaller extends PropertyProcessor {
      * from a property name.
      * @throws NoSuchFieldException no matching field was found in a class for a
      * property name.
-     * @throws JPromException Could not construct objects of the specified type
-     * from the input data.
+     * @throws MissingPropertyNameException a property field name could not be
+     * extracted from a property name.
      */
     public <T> Map<String, T> unmarshal(Class<T> clazz)
             throws MultiplePropertyDefinitionException, ReflectionException,
-            MissingInstanceNameException, NoSuchFieldException, JPromException {
+            MissingInstanceNameException, NoSuchFieldException, MissingPropertyNameException {
         final String rootName = getPropertyPrefix(clazz);
 
         try {
@@ -139,8 +134,8 @@ public class PropertyUnmarshaller extends PropertyProcessor {
                         }
                         final Matcher propNameMatcher = PROPERTY_FIELD_NAME.matcher(pname);
                         if (!propNameMatcher.matches()) {
-                            throw new LambdaException(ERROR_NO_PROPERTY_NAME,
-                                    pname);
+                            throw new MissingPropertyNameException(pname)
+                            .forLambda();
                         }
                         final T instance = map.computeIfAbsent(
                                 instNameMatcher.group(1),
@@ -169,7 +164,18 @@ public class PropertyUnmarshaller extends PropertyProcessor {
                             accumulator,
                             NoOpCombiner::combineMaps);
         } catch (LambdaException ex) {
-            throw ex.getCause();
+            final JPromException cause = ex.getCause();
+            if (cause instanceof ReflectionException) {
+                throw (ReflectionException) ex.getCause();
+            } else if (cause instanceof MissingInstanceNameException) {
+                throw (MissingInstanceNameException) ex.getCause();
+            } else if (cause instanceof NoSuchFieldException) {
+                throw (NoSuchFieldException) ex.getCause();
+            } else if (cause instanceof MissingPropertyNameException) {
+                throw (MissingPropertyNameException) ex.getCause();
+            } else {
+                throw new RuntimeException(ex.getCause());
+            }
         }
     }
 
