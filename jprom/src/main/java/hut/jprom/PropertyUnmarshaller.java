@@ -121,10 +121,13 @@ public class PropertyUnmarshaller extends PropertyProcessor {
      * @param <T> Type of the objects.
      * @param clazz Type of the objects.
      * @return A mapping of the instance names to their object instances.
+     * @throws MultiplePropertyDefinitionException A field name was defined more
+     * than once.
      * @throws JPromException Could not construct objects of the specified type
      * from the input data.
      */
-    public <T> Map<String, T> unmarshal(Class<T> clazz) throws JPromException {
+    public <T> Map<String, T> unmarshal(Class<T> clazz)
+            throws MultiplePropertyDefinitionException, JPromException {
         final String rootName = getPropertyPrefix(clazz);
 
         try {

@@ -32,11 +32,6 @@ abstract class PropertyProcessor implements Closeable {
      */
     static final String PROPERTY_PATH_DELIMITER = ".";
     /**
-     * Error message format used when a property name has been defined for
-     * multiple fields in a class.
-     */
-    private static final String ERROR_MULT_PROP_DEF = "Multiple definitions for property %s in %s";
-    /**
      * Regular expression to determine whether a {@link String} is empty or
      * consists of whitespace only.
      */
@@ -64,10 +59,11 @@ abstract class PropertyProcessor implements Closeable {
      *
      * @param clazz The class defining the property fields.
      * @return A mapping of the field names to the fields.
-     * @throws JPromException A field name was defined more than once.
+     * @throws MultiplePropertyDefinitionException A field name was defined more
+     * than once.
      */
     static Map<String, Field> getPropertyFields(Class<?> clazz)
-            throws JPromException {
+            throws MultiplePropertyDefinitionException {
         try {
             return Stream.of(clazz.getDeclaredFields())
                     .collect(HashMap::new,
@@ -79,15 +75,15 @@ abstract class PropertyProcessor implements Closeable {
                                     ? field.getName()
                                     : pdef.name();
                                     if (map.containsKey(pname)) {
-                                        throw new LambdaException(ERROR_MULT_PROP_DEF,
-                                                pname, clazz);
+                                        throw new MultiplePropertyDefinitionException(pname, clazz)
+                                        .forLambda();
                                     }
                                     map.put(pname, field);
                                 }
                             },
                             NoOpCombiner::combineMaps);
         } catch (LambdaException ex) {
-            throw ex.getCause();
+            throw (MultiplePropertyDefinitionException) ex.getCause();
         }
     }
 }

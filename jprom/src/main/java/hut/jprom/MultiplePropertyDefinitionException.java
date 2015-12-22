@@ -15,23 +15,28 @@
 package hut.jprom;
 
 /**
- * Base type for exceptions used in the jprom API.
+ * Exception used when a property name has been defined for multiple fields in a
+ * class.
  *
  * @author <a href="mailto:hutdevelopment@gmail.com">hutdev</a>
  */
-public class JPromException extends Exception {
+public class MultiplePropertyDefinitionException extends JPromException {
 
-    private static final long serialVersionUID = 7890516687974053017L;
+    /**
+     * Error message format.
+     */
+    private static final String ERROR_MULT_PROP_DEF = "Multiple definitions for property %s in %s";
+    private static final long serialVersionUID = 1305375328608109239L;
 
-    JPromException(Throwable cause) {
-        super(cause);
+    /**
+     * Creates a new instance of
+     * <code>MultiplePropertyDefinitionException</code>.
+     *
+     * @param pname Message parameter: Property name.
+     * @param clazz Message parameter: Declaring class.
+     */
+    MultiplePropertyDefinitionException(String pname, Class clazz) {
+        super(String.format(ERROR_MULT_PROP_DEF, pname, clazz));
     }
 
-    JPromException(String message) {
-        super(message);
-    }
-
-    LambdaException forLambda() {
-        return new LambdaException(this);
-    }
 }
