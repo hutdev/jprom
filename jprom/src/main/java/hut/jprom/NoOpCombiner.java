@@ -15,14 +15,19 @@
 package hut.jprom;
 
 import java.util.Map;
+import java.util.Properties;
 
 /**
- * Sequential streams do not need a combiner for collect operations. This class
- * provides a combiner method for {@link Map}s that does not do anything.
+ * Sequential streams do not need a combiner for collect operations, therefore
+ * this class provides combiner methods that do not do anything.
+ * <strong>Do not use the combiner methods provided by this class in collect
+ * operations on parallel streams!</strong>
+ * TODO: Create operational combiner methods. No op combiners might not be
+ * supported in future Java versions.
  *
  * @author <a href="mailto:hutdevelopment@gmail.com">hutdev</a>
  */
-class NoOpMapCombiner {
+class NoOpCombiner {
 
     /**
      * Combiner method that does not do anything.
@@ -30,7 +35,15 @@ class NoOpMapCombiner {
      * @param t
      * @param u
      */
-    static void combine(Map t, Map u) {
+    static void combineMaps(Map t, Map u) {
     }
 
+    /**
+     * Combiner method that does not do anything.
+     *
+     * @param t
+     * @param u
+     */
+    static void combineProperties(Properties t, Properties u) {
+    }
 }

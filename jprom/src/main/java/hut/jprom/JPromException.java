@@ -15,7 +15,8 @@
 package hut.jprom;
 
 /**
- * Base type for exceptions used in the jprom API.
+ * Base type for exceptions used in the jprom API. TODO: Create subtypes for
+ * various error scenarios.
  *
  * @author <a href="mailto:hutdevelopment@gmail.com">hutdev</a>
  */

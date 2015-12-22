@@ -14,7 +14,6 @@
  */
 package hut.jprom;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
@@ -25,7 +24,6 @@ import java.util.Properties;
 import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
 /**
  * Converts property file input to Java objects. TODO: Use asm for faster
@@ -33,17 +31,8 @@ import java.util.stream.Stream;
  *
  * @author <a href="mailto:hutdevelopment@gmail.com">hutdev</a>
  */
-public class PropertyUnmarshaller implements Closeable {
+public class PropertyUnmarshaller extends PropertyProcessor {
 
-    /**
-     * Regular expression to determine whether a {@link String} is empty or
-     * consists of whitespace only.
-     */
-    private static final String REGEX_BLANK_STRING = "^\\s*$";
-    /**
-     * Path delimiter in property names.
-     */
-    private static final String PROPERTY_PATH_DELIMITER = ".";
     /**
      * Regular expression pattern to extract the class instance name from a
      * property name.
@@ -73,11 +62,6 @@ public class PropertyUnmarshaller implements Closeable {
      * from a property name.
      */
     private static final String ERROR_NO_INSTANCE_NAME = "Cannot extract instance name from %s for class %s";
-    /**
-     * Error message format used when a property name has been defined for
-     * multiple fields in a class.
-     */
-    private static final String ERROR_MULT_PROP_DEF = "Multiple definitions for property %s in %s";
     /**
      * Property input.
      */
@@ -141,34 +125,11 @@ public class PropertyUnmarshaller implements Closeable {
      * from the input data.
      */
     public <T> Map<String, T> unmarshal(Class<T> clazz) throws JPromException {
-        final PropertyRoot propertyRoot
-                = clazz.getDeclaredAnnotation(PropertyRoot.class);
-        final String rootName
-                = (propertyRoot != null && !propertyRoot.name().matches(REGEX_BLANK_STRING))
-                ? propertyRoot.name()
-                : clazz.getSimpleName();
+        final String rootName = getPropertyPrefix(clazz);
 
         try {
-            /**
-             * Find the fields relevant for unmarshalling and determine the
-             * field names used in the property definitions.
-             */
-            final Map<String, Field> propertyFields = Stream.of(clazz.getDeclaredFields())
-                    .collect(HashMap::new,
-                            (map, field) -> {
-                                final Property pdef = field.getAnnotation(Property.class);
-                                final String pname = pdef.name().matches(REGEX_BLANK_STRING)
-                                ? field.getName()
-                                : pdef.name();
-                                if (map.containsKey(pname)) {
-                                    throw new LambdaException(ERROR_MULT_PROP_DEF, pname, clazz);
-                                }
-                                map.put(pname, field);
-                            },
-                            NoOpMapCombiner::combine);
-            /**
-             * Transform properties into objects.
-             */
+            final Map<String, Field> propertyFields = getPropertyFields(clazz);
+            //Transform properties into objects.
             final BiConsumer<Map<String, T>, String> accumulator
                     = (map, pname) -> {
                         final Matcher instNameMatcher = INSTANCE_NAME.matcher(pname);
@@ -206,7 +167,7 @@ public class PropertyUnmarshaller implements Closeable {
                             -> pname.startsWith(rootName + PROPERTY_PATH_DELIMITER))
                     .collect(HashMap::new,
                             accumulator,
-                            NoOpMapCombiner::combine);
+                            NoOpCombiner::combineMaps);
         } catch (LambdaException ex) {
             throw ex.getCause();
         }
