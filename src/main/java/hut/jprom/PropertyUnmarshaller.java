@@ -159,9 +159,8 @@ public class PropertyUnmarshaller extends PropertyProcessor {
             return properties.stringPropertyNames().stream()
                     .filter(pname
                             -> pname.startsWith(rootName + PROPERTY_PATH_DELIMITER))
-                    .collect(HashMap::new,
-                            accumulator,
-                            NoOpCombiner::combineMaps);
+                    .collect(HashMap::new, accumulator, 
+                            Map::putAll); //Instances will be overwritten when defined more than once.
         } catch (LambdaException ex) {
             final JPromException cause = ex.getCause();
             if (cause instanceof ReflectionException) {

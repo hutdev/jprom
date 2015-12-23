@@ -16,7 +16,9 @@ package hut.jprom;
 
 import java.io.Closeable;
 import java.lang.reflect.Field;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -80,7 +82,19 @@ abstract class PropertyProcessor implements Closeable {
                                     map.put(pname, field);
                                 }
                             },
-                            NoOpCombiner::combineMaps);
+                            (map1, map2) -> {
+                                if (!Collections.disjoint(map1.keySet(), map2.keySet())) {
+                                    for (final Iterator<String> i = map2.keySet().iterator();
+                                    i.hasNext();) {
+                                        final String pname = i.next();
+                                        if (map1.containsKey(pname)) {
+                                            throw new MultiplePropertyDefinitionException(pname, clazz)
+                                            .forLambda();
+                                        }
+                                    }
+                                }
+                                map1.putAll(map2);
+                            });
         } catch (LambdaException ex) {
             throw (MultiplePropertyDefinitionException) ex.getCause();
         }

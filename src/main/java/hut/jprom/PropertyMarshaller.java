@@ -129,7 +129,7 @@ public class PropertyMarshaller extends PropertyProcessor {
                 objects.entrySet().stream()
                         .collect(Properties::new,
                                 accumulator,
-                                NoOpCombiner::combineProperties)
+                                Map::putAll)
                         .store(output, comment);
             } catch (LambdaException ex) {
                 throw (ReflectionException) ex.getCause();
@@ -176,7 +176,7 @@ public class PropertyMarshaller extends PropertyProcessor {
                 .collect(HashMap::new,
                         (map, object)
                         -> map.put(Integer.toString(idGenerator.get()), object),
-                        NoOpCombiner::combineMaps);
+                        Map::putAll); //Atomic integer makes sure keys are unique.
         marshal(mappedObjects);
     }
 
