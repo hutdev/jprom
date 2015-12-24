@@ -17,6 +17,7 @@ package hut.jprom.example;
 import hut.jprom.JPromException;
 import hut.jprom.PropertyMarshaller;
 import hut.jprom.PropertyUnmarshaller;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -57,8 +58,10 @@ public class Main {
         final Map<String, Customer> customers = new HashMap<>(2);
         customers.put("dan", danny);
         customers.put("charlotte", charly);
-        try (final PropertyMarshaller marshaller = new PropertyMarshaller(System.out)) {
+        try (final ByteArrayOutputStream out = new ByteArrayOutputStream();
+                final PropertyMarshaller marshaller = new PropertyMarshaller(out)) {
             marshaller.marshal(customers);
+            System.out.println(out);
         }
     }
 }
