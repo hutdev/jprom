@@ -15,7 +15,7 @@
 package hut.jprom;
 
 import java.io.Closeable;
-import java.lang.reflect.Field;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -38,6 +38,10 @@ abstract class PropertyProcessor implements Closeable {
      * consists of whitespace only.
      */
     private static final String REGEX_BLANK_STRING = "^\\s*$";
+    /*
+     * Instances of the converters used by this processor.
+     */
+    private final Map<Class<? extends FieldTypeConverter>, FieldTypeConverter> converters = new HashMap<>();
 
     /**
      * Computes the prefix for properties pertaining to the specified class.
@@ -63,23 +67,24 @@ abstract class PropertyProcessor implements Closeable {
      * @throws MultiplePropertyDefinitionException A field name was defined more
      * than once.
      */
-    static Map<String, Field> getPropertyFields(Class<?> clazz)
+    static Map<String, PropertyField> getPropertyFields(Class<?> clazz)
             throws MultiplePropertyDefinitionException {
         try {
             return Stream.of(clazz.getDeclaredFields())
                     .collect(HashMap::new,
-                            (map, field) -> {
-                                final Property pdef = field.getAnnotation(Property.class);
+                            (map, decField) -> {
+                                final Property pdef = decField.getAnnotation(Property.class);
                                 if (pdef != null) {
                                     final String pname
                                     = pdef.name().matches(REGEX_BLANK_STRING)
-                                    ? field.getName()
+                                    ? decField.getName()
                                     : pdef.name();
                                     if (map.containsKey(pname)) {
                                         throw new MultiplePropertyDefinitionException(pname, clazz)
                                         .forLambda();
                                     }
-                                    map.put(pname, field);
+                                    map.put(pname,
+                                            new PropertyField(decField, pdef.converter()));
                                 }
                             },
                             (map1, map2) -> {
@@ -99,4 +104,45 @@ abstract class PropertyProcessor implements Closeable {
             throw (MultiplePropertyDefinitionException) ex.getCause();
         }
     }
+
+    /**
+     * Produces an instance of the passed subtype of {@link FieldTypeConverter}.
+     * Since the converter mechanism is stateless, the instances can be cached.
+     * If the cache already contains an instance of the class passed to this
+     * method, the cached instance will be returned. Otherwise a new intance
+     * will be created and added to the cache.
+     *
+     * @param converterClass Class of the required converter instance.
+     * @return The converter instance.
+     * @throws ReflectiveOperationException Could not create a new instance of
+     * the converter class.
+     */
+    FieldTypeConverter getConverterInstance(Class<? extends FieldTypeConverter> converterClass)
+            throws ReflectiveOperationException {
+        try {
+            final FieldTypeConverter converter = converters.computeIfAbsent(
+                    converterClass, (convClass) -> {
+                        try {
+                            return convClass.newInstance();
+                        } catch (ReflectiveOperationException ex) {
+                            throw new ReflectionException(ex).forLambda();
+                        }
+                    });
+            return converter;
+        } catch (LambdaException ex) {
+            throw ((ReflectiveOperationException) ex.getCause().getCause());
+        }
+    }
+
+    /**
+     * Clears the cached instances of {@link FieldTypeConverter} managed by
+     * {@link #getConverterInstance(java.lang.Class)}.
+     *
+     * @throws IOException Never thrown in this implementation.
+     */
+    @Override
+    public void close() throws IOException {
+        converters.clear();
+    }
+
 }

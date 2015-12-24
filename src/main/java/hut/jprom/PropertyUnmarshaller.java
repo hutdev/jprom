@@ -16,7 +16,6 @@ package hut.jprom;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
@@ -70,9 +69,16 @@ public class PropertyUnmarshaller extends PropertyProcessor {
 
     /**
      * Uses the setter method for a field to set its value in an object. If the
-     * type of the field which will be set is not {@link String} this method
-     * will use the {@link String} constructor of the field type to convert the
-     * value.
+     * {@link Property} annotation for the field defines a
+     * {@link FieldTypeConverter}, the converter will be used to create the
+     * field value from its {@link String} representation. If no
+     * {@link FieldTypeConverter} has been defined for the field and the type of
+     * the field is {@link String}, the value passed to this method will be used
+     * without further conversion as the value for the field. If no
+     * {@link FieldTypeConverter} has been defined for the field and the type of
+     * the field is <strong>not</strong> {@link String}, this method will
+     * attempt to use a {@link String} constructor of the field type to create
+     * the value.
      *
      * @param <T> The type of the modified object.
      * @param instance The object which will be modified.
@@ -81,10 +87,11 @@ public class PropertyUnmarshaller extends PropertyProcessor {
      * @return The modified object.
      * @throws ReflectiveOperationException Could not perform the operation.
      */
-    private static <T> T setFieldValue(T instance, Field field, String value)
+    private <T> T setFieldValue(T instance, PropertyField field, String value)
             throws ReflectiveOperationException {
-        final String fieldName = field.getName();
-        final Class fieldType = field.getType();
+        final java.lang.reflect.Field decField = field.getField();
+        final String fieldName = decField.getName();
+        final Class fieldType = decField.getType();
         final StringBuffer setterNameBuilder = new StringBuffer(SETTER_PREFIX)
                 .append(fieldName.substring(0, 1).toUpperCase());
         if (fieldName.length() > 1) {
@@ -92,10 +99,19 @@ public class PropertyUnmarshaller extends PropertyProcessor {
         }
         final Method setter = instance.getClass()
                 .getDeclaredMethod(setterNameBuilder.toString(), fieldType);
-
-        setter.invoke(instance, fieldType.equals(String.class)
-                ? value
-                : fieldType.getConstructor(String.class).newInstance(value));
+        final Class<? extends FieldTypeConverter> converterClass
+                = field.getConverter();
+        
+        final Object fieldValue;
+        if (converterClass.equals(NoOpFieldTypeConverter.class)) {
+            fieldValue = fieldType.equals(String.class)
+                    ? value
+                    : fieldType.getConstructor(String.class).newInstance(value);
+        } else {
+            fieldValue = getConverterInstance(converterClass).unmarshal(value);
+        }
+        
+        setter.invoke(instance, fieldValue);
         return instance;
     }
 
@@ -122,7 +138,7 @@ public class PropertyUnmarshaller extends PropertyProcessor {
         final String rootName = getPropertyPrefix(clazz);
 
         try {
-            final Map<String, Field> propertyFields = getPropertyFields(clazz);
+            final Map<String, PropertyField> propertyFields = getPropertyFields(clazz);
             //Transform properties into objects.
             final BiConsumer<Map<String, T>, String> accumulator
                     = (map, pname) -> {
@@ -145,7 +161,7 @@ public class PropertyUnmarshaller extends PropertyProcessor {
                                         throw new ReflectionException(ex).forLambda();
                                     }
                                 });
-                        final Field field = propertyFields.get(propNameMatcher.group(1));
+                        final PropertyField field = propertyFields.get(propNameMatcher.group(1));
                         if (field == null) {
                             throw new NoSuchFieldException(pname, clazz)
                             .forLambda();
@@ -159,7 +175,7 @@ public class PropertyUnmarshaller extends PropertyProcessor {
             return properties.stringPropertyNames().stream()
                     .filter(pname
                             -> pname.startsWith(rootName + PROPERTY_PATH_DELIMITER))
-                    .collect(HashMap::new, accumulator, 
+                    .collect(HashMap::new, accumulator,
                             Map::putAll); //Instances will be overwritten when defined more than once.
         } catch (LambdaException ex) {
             final JPromException cause = ex.getCause();
@@ -185,6 +201,7 @@ public class PropertyUnmarshaller extends PropertyProcessor {
      */
     @Override
     public void close() throws IOException {
+        super.close();
         input.close();
     }
 

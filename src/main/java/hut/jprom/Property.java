@@ -36,4 +36,15 @@ public @interface Property {
      * @return The property name of the field.
      */
     String name() default "";
+
+    /**
+     * Optional definition of a {@link FieldTypeConverter} allowing a custom
+     * definition of how a field value is marshalled and unmarshalled. If left
+     * to default, the <code>toString()</code> method will be used for
+     * marshalling and the <code>String</code> constructor will be used for
+     * unmarshalling.
+     *
+     * @return The class of the converter implementation.
+     */
+    Class<? extends FieldTypeConverter> converter() default NoOpFieldTypeConverter.class;
 }

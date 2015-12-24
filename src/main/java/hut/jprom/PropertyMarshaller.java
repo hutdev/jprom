@@ -16,7 +16,6 @@ package hut.jprom;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashMap;
@@ -61,16 +60,20 @@ public class PropertyMarshaller extends PropertyProcessor {
     }
 
     /**
-     * Uses the getter method for a field to retrieve its value in an object.
+     * Uses the getter method for a field to retrieve its value in an object and
+     * converts it to its {@link String} representation using the annotated
+     * {@link FieldTypeConverter} implementation. This method uses the
+     * <code>toString()</code> method of the object to get its {@link String}
+     * representation if no converter has been defined.
      *
      * @param instance The object where the value will be obtained.
      * @param field The field containing the value.
-     * @return The value.
+     * @return The <code>String</code> representation of the field value.
      * @throws ReflectiveOperationException Could not perform the operation.
      */
-    private static Object getFieldValue(Object instance, Field field)
+    private String getFieldValue(Object instance, PropertyField field)
             throws ReflectiveOperationException {
-        final String fieldName = field.getName();
+        final String fieldName = field.getField().getName();
         final StringBuffer getterNameBuilder = new StringBuffer(GETTER_PREFIX)
                 .append(fieldName.substring(0, 1).toUpperCase());
         if (fieldName.length() > 1) {
@@ -78,8 +81,12 @@ public class PropertyMarshaller extends PropertyProcessor {
         }
         final Method getter = instance.getClass()
                 .getDeclaredMethod(getterNameBuilder.toString());
-
-        return getter.invoke(instance);
+        final Object rawValue = getter.invoke(instance);
+        final Class<? extends FieldTypeConverter> converterClass
+                = field.getConverter();
+        return converterClass.equals(NoOpFieldTypeConverter.class)
+                ? rawValue.toString()
+                : getConverterInstance(converterClass).marshal(rawValue);
     }
 
     /**
@@ -101,7 +108,7 @@ public class PropertyMarshaller extends PropertyProcessor {
         if (!objects.isEmpty()) {
             final Class<T> clazz = (Class<T>) objects.values()
                     .iterator().next().getClass();
-            final Map<String, Field> propertyFields = getPropertyFields(clazz);
+            final Map<String, PropertyField> propertyFields = getPropertyFields(clazz);
             final String rootName = getPropertyPrefix(clazz);
             //Transform objects into Properties.
             final BiConsumer<Properties, Entry<String, T>> accumulator
@@ -114,11 +121,10 @@ public class PropertyMarshaller extends PropertyProcessor {
                                     + PROPERTY_PATH_DELIMITER
                                     + fieldEntry.getKey();
                             try {
-                                final Object propertyValue
+                                final String propertyValue
                                         = getFieldValue(objectEntry.getValue(),
                                                 fieldEntry.getValue());
-                                properties.setProperty(propertyName,
-                                        propertyValue.toString());
+                                properties.setProperty(propertyName, propertyValue);
                             } catch (ReflectiveOperationException ex) {
                                 throw new ReflectionException(ex).forLambda();
                             }
@@ -207,6 +213,7 @@ public class PropertyMarshaller extends PropertyProcessor {
      */
     @Override
     public void close() throws IOException {
+        super.close();
         output.close();
     }
 
