@@ -96,6 +96,7 @@ public class PropertyMarshaller extends PropertyProcessor {
      * @param <T> Type of the serialized objects.
      * @param objects The objects which will be converted to property data.
      * @param comment Comment which will be written to the property output.
+     * @return This instance of <code>PropertyMarshaller</code>.
      * @throws MultiplePropertyDefinitionException A field name was defined more
      * than once.
      * @throws ReflectionException Could not perform reflective operations
@@ -103,7 +104,7 @@ public class PropertyMarshaller extends PropertyProcessor {
      * @throws java.io.IOException Could not write properties to the output.
      * @see Properties#store(java.io.OutputStream, java.lang.String)
      */
-    public <T> void marshal(Map<String, T> objects, String comment)
+    public <T> PropertyMarshaller marshal(Map<String, T> objects, String comment)
             throws MultiplePropertyDefinitionException, ReflectionException, IOException {
         if (!objects.isEmpty()) {
             final Class<T> clazz = (Class<T>) objects.values()
@@ -141,6 +142,7 @@ public class PropertyMarshaller extends PropertyProcessor {
                 throw (ReflectionException) ex.getCause();
             }
         }
+        return this;
     }
 
     /**
@@ -149,6 +151,7 @@ public class PropertyMarshaller extends PropertyProcessor {
      *
      * @param <T> Type of the serialized objects.
      * @param objects The objects which will be converted to property data.
+     * @return This instance of <code>PropertyMarshaller</code>.
      * @throws MultiplePropertyDefinitionException A field name was defined more
      * than once.
      * @throws ReflectionException Could not perform reflective operations
@@ -156,9 +159,9 @@ public class PropertyMarshaller extends PropertyProcessor {
      * @throws java.io.IOException Could not write properties to the output.
      * @see Properties#store(java.io.OutputStream, java.lang.String)
      */
-    public <T> void marshal(Map<String, T> objects)
+    public <T> PropertyMarshaller marshal(Map<String, T> objects)
             throws MultiplePropertyDefinitionException, ReflectionException, IOException {
-        marshal(objects, DEFAULT_COMMENT);
+        return marshal(objects, DEFAULT_COMMENT);        
     }
 
     /**
@@ -169,6 +172,7 @@ public class PropertyMarshaller extends PropertyProcessor {
      * @param <T> Type of the serialized objects.
      * @param objects The objects which will be converted to property data.
      * @param comment Comment which will be written to the property output.
+     * @return This instance of <code>PropertyMarshaller</code>.
      * @throws MultiplePropertyDefinitionException A field name was defined more
      * than once.
      * @throws ReflectionException Could not perform reflective operations
@@ -176,11 +180,11 @@ public class PropertyMarshaller extends PropertyProcessor {
      * @throws java.io.IOException Could not write properties to the output.
      * @see Properties#store(java.io.OutputStream, java.lang.String)
      */
-    public <T> void marshal(Collection<T> objects, String comment)
+    public <T> PropertyMarshaller marshal(Collection<T> objects, String comment)
             throws MultiplePropertyDefinitionException, ReflectionException, IOException {
         final HashMap<String, T> mappedObjects = objects.stream()
                 .collect(HashMap::new, this::putAnonymousObject, Map::putAll);
-        marshal(mappedObjects, comment);
+        return marshal(mappedObjects, comment);
     }
 
     /**
@@ -190,6 +194,7 @@ public class PropertyMarshaller extends PropertyProcessor {
      *
      * @param <T> Type of the serialized objects.
      * @param objects The objects which will be converted to property data.
+     * @return This instance of <code>PropertyMarshaller</code>.
      * @throws MultiplePropertyDefinitionException A field name was defined more
      * than once.
      * @throws ReflectionException Could not perform reflective operations
@@ -197,9 +202,9 @@ public class PropertyMarshaller extends PropertyProcessor {
      * @throws java.io.IOException Could not write properties to the output.
      * @see Properties#store(java.io.OutputStream, java.lang.String)
      */
-    public <T> void marshal(Collection<T> objects)
+    public <T> PropertyMarshaller marshal(Collection<T> objects)
             throws MultiplePropertyDefinitionException, ReflectionException, IOException {
-        marshal(objects, DEFAULT_COMMENT);
+        return marshal(objects, DEFAULT_COMMENT);
     }
 
     /**
@@ -209,6 +214,7 @@ public class PropertyMarshaller extends PropertyProcessor {
      *
      * @param <T> Type of the serialized object.
      * @param object The object which will be converted to property data.
+     * @return This instance of <code>PropertyMarshaller</code>.
      * @throws MultiplePropertyDefinitionException A field name was defined more
      * than once.
      * @throws ReflectionException Could not perform reflective operations
@@ -216,9 +222,9 @@ public class PropertyMarshaller extends PropertyProcessor {
      * @throws java.io.IOException Could not write properties to the output.
      * @see Properties#store(java.io.OutputStream, java.lang.String)
      */
-    public <T> void marshal(T object)
+    public <T> PropertyMarshaller marshal(T object)
             throws MultiplePropertyDefinitionException, ReflectionException, IOException {
-        marshal(object, DEFAULT_COMMENT);
+        return marshal(object, DEFAULT_COMMENT);
     }
 
     /**
@@ -229,6 +235,7 @@ public class PropertyMarshaller extends PropertyProcessor {
      * @param <T> Type of the serialized object.
      * @param object The object which will be converted to property data.
      * @param comment Comment which will be written to the property output.
+     * @return This instance of <code>PropertyMarshaller</code>.
      * @throws MultiplePropertyDefinitionException A field name was defined more
      * than once.
      * @throws ReflectionException Could not perform reflective operations
@@ -236,11 +243,11 @@ public class PropertyMarshaller extends PropertyProcessor {
      * @throws java.io.IOException Could not write properties to the output.
      * @see Properties#store(java.io.OutputStream, java.lang.String)
      */
-    public <T> void marshal(T object, String comment)
+    public <T> PropertyMarshaller marshal(T object, String comment)
             throws MultiplePropertyDefinitionException, ReflectionException, IOException {
         final HashMap<String, T> mappedObject = new HashMap<>(1);
         putAnonymousObject(mappedObject, object);
-        marshal(mappedObject, comment);
+        return marshal(mappedObject, comment);
     }
 
     /**
@@ -250,6 +257,7 @@ public class PropertyMarshaller extends PropertyProcessor {
      * @param <T> Type of the serialized object.
      * @param name The instance name for the serialized object.
      * @param object The object which will be converted to property data.
+     * @return This instance of <code>PropertyMarshaller</code>.
      * @throws MultiplePropertyDefinitionException A field name was defined more
      * than once.
      * @throws ReflectionException Could not perform reflective operations
@@ -257,9 +265,9 @@ public class PropertyMarshaller extends PropertyProcessor {
      * @throws java.io.IOException Could not write properties to the output.
      * @see Properties#store(java.io.OutputStream, java.lang.String)
      */
-    public <T> void marshal(String name, T object)
+    public <T> PropertyMarshaller marshal(String name, T object)
             throws MultiplePropertyDefinitionException, ReflectionException, IOException {
-        marshal(name, object, DEFAULT_COMMENT);
+        return marshal(name, object, DEFAULT_COMMENT);
     }
 
     /**
@@ -270,6 +278,7 @@ public class PropertyMarshaller extends PropertyProcessor {
      * @param name The instance name for the serialized object.
      * @param object The object which will be converted to property data.
      * @param comment Comment which will be written to the property output.
+     * @return This instance of <code>PropertyMarshaller</code>.
      * @throws MultiplePropertyDefinitionException A field name was defined more
      * than once.
      * @throws ReflectionException Could not perform reflective operations
@@ -277,11 +286,11 @@ public class PropertyMarshaller extends PropertyProcessor {
      * @throws java.io.IOException Could not write properties to the output.
      * @see Properties#store(java.io.OutputStream, java.lang.String)
      */
-    public <T> void marshal(String name, T object, String comment)
+    public <T> PropertyMarshaller marshal(String name, T object, String comment)
             throws MultiplePropertyDefinitionException, ReflectionException, IOException {
         final HashMap<String, T> mappedObject = new HashMap<>(1);
         mappedObject.put(name, object);
-        marshal(mappedObject, comment);
+        return marshal(mappedObject, comment);
     }
 
     /**

@@ -67,8 +67,9 @@ public class Main {
 
         try (final ByteArrayOutputStream out = new ByteArrayOutputStream();
                 final PropertyMarshaller marshaller = new PropertyMarshaller(out)) {
-            marshaller.marshal(customers);
-            marshaller.marshal("myConfig", config, "My configuration");
+            marshaller
+                    .marshal(customers)
+                    .marshal("myConfig", config, "My configuration");
             System.out.println(out);
         }
     }
