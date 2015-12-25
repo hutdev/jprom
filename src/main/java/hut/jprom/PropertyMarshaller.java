@@ -183,7 +183,7 @@ public class PropertyMarshaller extends PropertyProcessor {
                         (map, object)
                         -> map.put(Integer.toString(idGenerator.get()), object),
                         Map::putAll); //Atomic integer makes sure keys are unique.
-        marshal(mappedObjects);
+        marshal(mappedObjects, comment);
     }
 
     /**
