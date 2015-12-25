@@ -19,8 +19,6 @@ import hut.jprom.PropertyMarshaller;
 import hut.jprom.PropertyUnmarshaller;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -66,13 +64,11 @@ public class Main {
 
         final Configuration config = new Configuration();
         config.setLocale(Locale.GERMANY);
-        final Collection<Configuration> configs = new ArrayList<>(1);
-        configs.add(config);
-        
+
         try (final ByteArrayOutputStream out = new ByteArrayOutputStream();
                 final PropertyMarshaller marshaller = new PropertyMarshaller(out)) {
             marshaller.marshal(customers);
-            marshaller.marshal(configs, "My configuration");
+            marshaller.marshal("myConfig", config, "My configuration");
             System.out.println(out);
         }
     }
