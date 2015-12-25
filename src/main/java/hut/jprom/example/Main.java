@@ -19,7 +19,10 @@ import hut.jprom.PropertyMarshaller;
 import hut.jprom.PropertyUnmarshaller;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -45,6 +48,8 @@ public class Main {
         try (final PropertyUnmarshaller unmarshaller = new PropertyUnmarshaller(Main.class.getResourceAsStream(propertiesSource))) {
             final Map<String, Customer> customers = unmarshaller.unmarshal(Customer.class);
             System.out.println(customers);
+            final Map<String, Configuration> configs = unmarshaller.unmarshal(Configuration.class);
+            System.out.println(configs);
         }
     }
 
@@ -58,9 +63,16 @@ public class Main {
         final Map<String, Customer> customers = new HashMap<>(2);
         customers.put("dan", danny);
         customers.put("charlotte", charly);
+
+        final Configuration config = new Configuration();
+        config.setLocale(Locale.GERMANY);
+        final Collection<Configuration> configs = new ArrayList<>(1);
+        configs.add(config);
+        
         try (final ByteArrayOutputStream out = new ByteArrayOutputStream();
                 final PropertyMarshaller marshaller = new PropertyMarshaller(out)) {
             marshaller.marshal(customers);
+            marshaller.marshal(configs, "My configuration");
             System.out.println(out);
         }
     }
