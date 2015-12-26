@@ -20,9 +20,12 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Converts property file input to Java objects.
@@ -68,6 +71,36 @@ public class PropertyUnmarshaller extends PropertyProcessor {
     }
 
     /**
+     * Inspects and throws the causing exception of a {@link LamdaException}. If
+     * the type of the causing exception is not of one of the declared thrown
+     * exceptions, this method will return silently.
+     *
+     * @param ex The <code>LambdaException</code> to inspect.
+     * @throws ReflectionException The cause of the method parameter was a
+     * <code>ReflectionException</code>.
+     * @throws MissingInstanceNameException The cause of the method parameter
+     * was a <code>MissingInstanceNameException</code>.
+     * @throws NoSuchFieldException The cause of the method parameter was a
+     * <code>NoSuchFieldException</code>.
+     * @throws MissingPropertyNameException The cause of the method parameter
+     * was a <code>MissingPropertyNameException</code>.
+     */
+    private static void throwCause(LambdaException ex)
+            throws ReflectionException, MissingInstanceNameException,
+            NoSuchFieldException, MissingPropertyNameException {
+        final JPromException cause = ex.getCause();
+        if (cause instanceof ReflectionException) {
+            throw (ReflectionException) ex.getCause();
+        } else if (cause instanceof MissingInstanceNameException) {
+            throw (MissingInstanceNameException) ex.getCause();
+        } else if (cause instanceof NoSuchFieldException) {
+            throw (NoSuchFieldException) ex.getCause();
+        } else if (cause instanceof MissingPropertyNameException) {
+            throw (MissingPropertyNameException) ex.getCause();
+        }
+    }
+
+    /**
      * Uses the setter method for a field to set its value in an object. If the
      * {@link Property} annotation for the field defines a
      * {@link FieldTypeConverter}, the converter will be used to create the
@@ -101,7 +134,7 @@ public class PropertyUnmarshaller extends PropertyProcessor {
                 .getDeclaredMethod(setterNameBuilder.toString(), fieldType);
         final Class<? extends FieldTypeConverter> converterClass
                 = field.getConverter();
-        
+
         final Object fieldValue;
         if (converterClass.equals(NoOpFieldTypeConverter.class)) {
             fieldValue = fieldType.equals(String.class)
@@ -110,7 +143,7 @@ public class PropertyUnmarshaller extends PropertyProcessor {
         } else {
             fieldValue = getConverterInstance(converterClass).unmarshal(value);
         }
-        
+
         setter.invoke(instance, fieldValue);
         return instance;
     }
@@ -178,18 +211,46 @@ public class PropertyUnmarshaller extends PropertyProcessor {
                     .collect(HashMap::new, accumulator,
                             Map::putAll); //Instances will be overwritten when defined more than once.
         } catch (LambdaException ex) {
-            final JPromException cause = ex.getCause();
-            if (cause instanceof ReflectionException) {
-                throw (ReflectionException) ex.getCause();
-            } else if (cause instanceof MissingInstanceNameException) {
-                throw (MissingInstanceNameException) ex.getCause();
-            } else if (cause instanceof NoSuchFieldException) {
-                throw (NoSuchFieldException) ex.getCause();
-            } else if (cause instanceof MissingPropertyNameException) {
-                throw (MissingPropertyNameException) ex.getCause();
-            } else {
-                throw new RuntimeException(ex.getCause());
-            }
+            throwCause(ex);
+            throw new RuntimeException(ex.getCause());
+        }
+    }
+
+    /**
+     * Extract objects from the property data.
+     *
+     * @param classes Types of the objects.
+     * @return The extracted objects wrapped in {@link PropertyObject}s.
+     * @throws MultiplePropertyDefinitionException A field name was defined more
+     * than once.
+     * @throws ReflectionException Could not perform reflective operations
+     * required to deserialize the provided property data to objects.
+     * @throws MissingInstanceNameException instance name could not be extracted
+     * from a property name.
+     * @throws NoSuchFieldException no matching field was found in a class for a
+     * property name.
+     * @throws MissingPropertyNameException a property field name could not be
+     * extracted from a property name.
+     */
+    public Set<PropertyObject> unmarshal(Class... classes) throws
+            MultiplePropertyDefinitionException, ReflectionException,
+            MissingInstanceNameException, NoSuchFieldException,
+            MissingPropertyNameException {
+        try {
+            return Stream.of(classes)
+                    .flatMap(clazz -> {
+                        try {
+                            final Map<String, Object> mappedObjects = unmarshal(clazz);
+                            return mappedObjects.entrySet().stream().map(entry
+                                    -> new PropertyObject(clazz, entry.getValue(), entry.getKey()));
+                        } catch (JPromException ex) {
+                            throw new LambdaException(ex);
+                        }
+                    })
+                    .collect(Collectors.toSet());
+        } catch (LambdaException ex) {
+            throwCause(ex);
+            throw new RuntimeException(ex.getCause());
         }
     }
 
