@@ -16,12 +16,14 @@ package hut.jprom.example;
 
 import hut.jprom.JPromException;
 import hut.jprom.PropertyMarshaller;
+import hut.jprom.PropertyObject;
 import hut.jprom.PropertyUnmarshaller;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * This class demonstrates two use cases of the jprom library:
@@ -36,18 +38,31 @@ public class Main {
 
     public static void main(String[] args) throws IOException, JPromException {
         System.out.println("The following objects have been deserialized from a properties file...");
+        showExplicitUnmarshalling();
+        System.out.println("The following objects have been deserialized from a properties file...");
         showUnmarshalling();
         System.out.println("\nThe following property output has been generated from Java objects...");
         showMarshalling();
     }
 
-    private static void showUnmarshalling() throws IOException, JPromException {
+    private static void showExplicitUnmarshalling() throws IOException, JPromException {
         final String propertiesSource = "/example/example.properties";
         try (final PropertyUnmarshaller unmarshaller = new PropertyUnmarshaller(Main.class.getResourceAsStream(propertiesSource))) {
             final Map<String, Customer> customers = unmarshaller.unmarshal(Customer.class);
             System.out.println(customers);
             final Map<String, Configuration> configs = unmarshaller.unmarshal(Configuration.class);
             System.out.println(configs);
+        }
+    }
+
+    private static void showUnmarshalling() throws IOException, JPromException {
+        final String propertiesSource = "/example/example.properties";
+        try (final PropertyUnmarshaller unmarshaller = new PropertyUnmarshaller(Main.class.getResourceAsStream(propertiesSource))) {
+            final Set<PropertyObject> objects = unmarshaller.unmarshal(Customer.class, Configuration.class);
+            objects.stream().filter(obj -> obj.getType() == Customer.class)
+                    .forEach(System.out::println);
+            objects.stream().filter(obj -> obj.getType() == Configuration.class)
+                    .forEach(System.out::println);
         }
     }
 
